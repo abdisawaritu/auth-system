@@ -23,6 +23,8 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 
 // MySQL-backed session store.
 const MySQLStore = MySQLStoreFactory(session);
