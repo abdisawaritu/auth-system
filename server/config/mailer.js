@@ -66,8 +66,12 @@ export const sendVerificationEmail = async ({ email, name, token }) => {
     throw new Error("Invalid verification token.");
   }
 
-  // Build the URL from the validated backend origin.
-  const verificationUrl = new URL("/api/auth/verify-email", serverUrl);
+  // Build the verification link for the React frontend.
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173")
+    .trim()
+    .replace(/\/+$/, "");
+
+  const verificationUrl = new URL(`${clientUrl}/verify-email`);
 
   verificationUrl.searchParams.set("token", token);
 
@@ -137,8 +141,6 @@ export const sendVerificationEmail = async ({ email, name, token }) => {
   });
 };
 
-
-
 export const sendPasswordResetEmail = async ({ email, name, token }) => {
   if (!smtpUser || !smtpPassword) {
     throw new Error("Email service is not configured.");
@@ -148,10 +150,17 @@ export const sendPasswordResetEmail = async ({ email, name, token }) => {
     throw new Error("Invalid password reset token.");
   }
 
-  const resetUrl = new URL("/api/auth/reset-password", serverUrl);
+  
+const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173")
+  .trim()
+  .replace(/\/+$/, "");
 
-  resetUrl.searchParams.set("token", token);
-  const resetLink = resetUrl.toString();
+const resetUrl = new URL(`${clientUrl}/reset-password`);
+
+resetUrl.searchParams.set("token", token);
+
+const resetLink = resetUrl.toString();
+
 
   return transporter.sendMail({
     from: `"Auth System" <${smtpUser}>`,
@@ -181,10 +190,6 @@ export const sendPasswordResetEmail = async ({ email, name, token }) => {
     `,
   });
 };
-
-
-
-
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => {

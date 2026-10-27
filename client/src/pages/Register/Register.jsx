@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { authService } from "../../services/authService";
+import { ApiError } from "../../services/api";
 import styles from "./Register.module.css";
 
 const initialForm = {
@@ -18,7 +19,7 @@ function validateForm(form) {
   const password = form.password;
 
   if (!name) {
-    errors.name = "Please enter your name.";
+    errors.name = "Please enter your full name.";
   } else if (name.length > 100) {
     errors.name = "Your name must not exceed 100 characters.";
   }
@@ -40,25 +41,38 @@ function validateForm(form) {
   return errors;
 }
 
-function getErrorMessage(error) {
-  if (error?.status === 409) {
-    return "An account with this email already exists. Try logging in.";
+function getRegistrationErrorMessage(error) {
+  if (error?.code === "NETWORK_ERROR") {
+    return "We couldn't connect to the server. Check your internet connection and try again.";
   }
 
-  if (error?.status === 400 || error?.status === 422) {
-    return error.message || "Please check the information you entered.";
+  if (error instanceof ApiError || typeof error?.status === "number") {
+    if (error.status === 409) {
+      return "An account with this email already exists. Try logging in or use another email address.";
+    }
+
+    if (error.status === 400 || error.status === 422) {
+      return "Some of your information is invalid. Please review the fields and try again.";
+    }
+
+    if (error.status === 429) {
+      return "Too many registration attempts. Please wait a few minutes and try again.";
+    }
+
+    if (error.status >= 500) {
+      return "We couldn't create your account because of a server problem. Please try again later.";
+    }
+
+    if (error.status === 401 || error.status === 403) {
+      return "Your registration request could not be authorized. Please refresh the page and try again.";
+    }
   }
 
-  if (error?.status >= 500) {
-    return "The server encountered a problem. Please try again later.";
-  }
-
-  return error?.message || "Registration failed. Please try again.";
+  return "We couldn't create your account. Please check your connection and try again.";
 }
 
 function Register() {
-  
-   const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
@@ -80,6 +94,7 @@ function Register() {
 
     setSubmitError("");
     setSuccessMessage("");
+    setVerificationEmail("");
   }
 
   async function handleSubmit(event) {
@@ -89,6 +104,7 @@ function Register() {
 
     setSubmitError("");
     setSuccessMessage("");
+    setVerificationEmail("");
 
     const validationErrors = validateForm(form);
     setErrors(validationErrors);
@@ -100,26 +116,23 @@ function Register() {
     setIsSubmitting(true);
 
     try {
-      const result = await authService.register({
+      await authService.register({
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
       });
+
       const registeredEmail = form.email.trim();
 
       setVerificationEmail(registeredEmail);
-
       setForm(initialForm);
+      setErrors({});
 
       setSuccessMessage(
-        result?.message ||
-          "Registration successful. Please check your email for verification instructions.",
+        "Your account has been created. Check your email for verification instructions before signing in.",
       );
-
-      // Allow the user to read the confirmation before navigating.
-      // We do not automatically log them in after registration.
     } catch (error) {
-      setSubmitError(getErrorMessage(error));
+      setSubmitError(getRegistrationErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -142,14 +155,26 @@ function Register() {
           </div>
         )}
 
-        {successMessage && verificationEmail && (
-          <p className={styles.footer}>
-            <Link
-              to={`/verify-email?email=${encodeURIComponent(verificationEmail)}`}
-            >
-              Open email verification
-            </Link>
-          </p>
+        {successMessage && (
+          <div className={styles.successBanner} role="status">
+            <p>{successMessage}</p>
+
+            {verificationEmail && (
+              <p>
+                Registered email: <strong>{verificationEmail}</strong>
+              </p>
+            )}
+
+            {verificationEmail && (
+              <Link
+                to={`/verify-email?email=${encodeURIComponent(
+                  verificationEmail,
+                )}`}
+              >
+                Continue to email verification
+              </Link>
+            )}
+          </div>
         )}
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>

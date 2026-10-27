@@ -1,0 +1,85 @@
+
+.homePage {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 6%;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 4%);
+}
+
+.logo {
+  color: #1e293b;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.signInButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 24px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.signInButton:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.signInButton:focus-visible,
+.logo:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.content {
+  padding: 32px 20px;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 16px 5%;
+  }
+
+  .logo {
+    font-size: 1.15rem;
+  }
+
+  .signInButton {
+    min-height: 40px;
+    padding: 0 18px;
+  }
+
+  .content {
+    padding: 24px 12px;
+  }
+}

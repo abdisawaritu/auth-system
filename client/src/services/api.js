@@ -3,11 +3,12 @@ const API_BASE_URL = (
 ).replace(/\/+$/, "");
 
 export class ApiError extends Error {
-  constructor(message, status, data) {
+  constructor(message, status = null, data = null, code = null) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+    this.code = code;
   }
 }
 
@@ -24,8 +25,6 @@ export async function apiRequest(
     ...options,
     method,
     headers: requestHeaders,
-
-    // Send and receive session cookies.
     credentials: "include",
   };
 
@@ -43,8 +42,11 @@ export async function apiRequest(
   try {
     response = await fetch(url, requestOptions);
   } catch {
-    throw new Error(
-      "Unable to connect to the server. Check that the backend is running and the API URL is correct.",
+    throw new ApiError(
+      "The server could not be reached.",
+      null,
+      null,
+      "NETWORK_ERROR",
     );
   }
 
@@ -56,7 +58,12 @@ export async function apiRequest(
       try {
         data = await response.json();
       } catch {
-        throw new Error("The server returned invalid JSON.");
+        throw new ApiError(
+          "The server returned an unreadable response.",
+          response.status,
+          null,
+          "INVALID_RESPONSE",
+        );
       }
     } else {
       data = await response.text();
@@ -64,14 +71,19 @@ export async function apiRequest(
   }
 
   if (!response.ok) {
-    const message =
+    // Keep the server response for controlled error mapping.
+    // UI components should not display this message directly.
+    const serverMessage =
       data && typeof data === "object" && typeof data.message === "string"
         ? data.message
-        : typeof data === "string" && data.trim()
-          ? data
-          : `Request failed with status ${response.status}.`;
+        : null;
 
-    throw new ApiError(message, response.status, data);
+    throw new ApiError(
+      serverMessage || "The request could not be completed.",
+      response.status,
+      data,
+      data && typeof data === "object" ? (data.code ?? null) : null,
+    );
   }
 
   return data;
