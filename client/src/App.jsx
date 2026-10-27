@@ -9,27 +9,30 @@ import ResetPassword from "./pages/ResetPassword/ResetPassword";
 import ChangePassword from "./pages/ChangePassword/ChangePassword";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import NotFound from "./pages/NotFound/NotFound";
+import Profile from "./pages/Profile/Profile";
+
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 function App() {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Home />} />
-
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
       <Route path="/verify-email" element={<VerifyEmail />} />
-
       <Route path="/forgot-password" element={<ForgotPassword />} />
-
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route path="/change-password" element={<ChangePassword />} />
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/change-password" element={<ChangePassword />} />
+      </Route>
 
-      <Route path="/dashboard" element={<Dashboard />} />
-
+      {/* Not found */}
       <Route path="/404" element={<NotFound />} />
-
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );
